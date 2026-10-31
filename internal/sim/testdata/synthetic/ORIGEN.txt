@@ -1,0 +1,9 @@
+SYNTHETIC capture, hand-written by internal/sim/sim_test.go, not recorded from a match.
+The original's side is encoded with the rules of sub_1400E3B50:83-85 (0x19=0 and the observer's
+registration), sub_1400E43E0 (0x1E), and the shape of the window the observer receives: the
+session's 0x0As, in order, from the first one, and nothing else. That shape is the one
+2026-09-29_012528_03cb67c7cf19 measured on the real original (1346 and 800 messages, all
+identical byte for byte to messages of the player's 0x0A). The 0x0A differences are
+informative on purpose: the real server emits one ack per simulation tick and here there is one.
+Regenerate with:
+  go test ./internal/sim -run TestWriteSyntheticFixture -writefixture=<dir>

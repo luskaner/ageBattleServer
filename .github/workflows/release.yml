@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.27.3
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.27.3"
+          cache: true
+
+      - name: Set up Go legacy for Windows 7
+        id: setup_go_legacy
+        shell: bash
+        run: |
+          dir="${{ vars.GOROOT_LEGACY }}"
+          version="1.27.3-1"
+          subdir="go-legacy-win7"
+          curl -L "https://github.com/thongtech/${subdir}/releases/download/v${version}/${subdir}-${version}.linux_amd64.tar.gz" -o go.tar.gz
+          sudo mkdir -p "$dir"
+          sudo tar -C "$dir" --strip-components=1 -xzf go.tar.gz
+          rm go.tar.gz
+          echo "goroot=$dir/$subdir" >> "$GITHUB_OUTPUT"
+
+      - name: Generate GoReleaser config
+        shell: bash
+        run: cd tools/scripts && go run ./cmd/generateGoreleaserConfig.go "${{ steps.setup_go_legacy.outputs.goroot }}"
+
+      - name: Import release signing key
+        shell: bash
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          version: "~> v2"
+          args: release --clean --fail-fast
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ secrets.GPG_FINGERPRINT }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}

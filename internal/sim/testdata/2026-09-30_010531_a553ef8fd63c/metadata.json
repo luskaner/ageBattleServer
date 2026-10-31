@@ -1,0 +1,82 @@
+{
+  "format_version": 2,
+  "started_at": "2026-09-30 01:05:31",
+  "commit": "a553ef8fd63c6ae4fa9ebc370746c9d9414fd3b1",
+  "dirty": "false",
+  "primary": {
+    "writer": "ours",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerOrig.exe",
+    "sha256": "1c6e6173ba233e625f10f00263f17a20631f090e49badb574a4d26a6b7219655"
+  },
+  "secondary": {
+    "writer": "original",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerReimpl.exe",
+    "sha256": "e090722eecabf1d8ad15b52f3772d66a6ce084fcb638489d881ccbe58e73244f"
+  },
+  "primary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "14001",
+    "-outofbandPort",
+    "14002",
+    "-websocketPort",
+    "14003",
+    "-region",
+    "Server",
+    "-name",
+    "Server",
+    "-publicPort",
+    "64601",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "secondary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "15001",
+    "-outofbandPort",
+    "15002",
+    "-websocketPort",
+    "15003",
+    "-region",
+    "Server",
+    "-name",
+    "Server",
+    "-publicPort",
+    "64601",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "trim": {
+    "tool": "cmd/trimsim",
+    "source": "2026-09-30_010531_a553ef8fd63c",
+    "kept_from": "2026-09-30T01:16:49+02:00",
+    "kept_to": "2026-09-30T01:20:59+02:00",
+    "kept_span": "4m10s",
+    "dropped": "47027 of 50662 rows, 0.2 MB of log",
+    "why": "el observador se registra a los 4m02s y el 0x1E llega a los 4m03s: antes de ahi no hay handshake que comparar, y 4m10s deja la ventana servida y a los dos lados contando lo mismo. Los 9m50s que se van son el resto de la partida, que es mas cola del mismo 0x0A",
+    "verified": [
+      "conn 0: verdict: matched the original on everything must-match, and the same must-match findings on the same connections (0)",
+      "conn 16371: the client's own messages: 371, and they are the first 371 of the 13483 the untrimmed capture recorded. The crop removed 0x09 x8792 0x13 x1010 0x14 x19 0x17 x3291",
+      "conn 16371: the original's answers: 787, and they are the first 787 of the 6461 the untrimmed capture recorded. The crop removed 0x0A x4646 0x13 x1009 0x14 x19 from this connection",
+      "conn 50569: the client's own messages: 3, and they are the first 3 of the 26 the untrimmed capture recorded. The crop removed 0x14 x22 0x1B x1",
+      "conn 50569: the original's answers: 650, and they are the first 650 of the 5387 the untrimmed capture recorded. The crop removed 0x0A x4716 0x14 x21 from this connection",
+      "conn 50569: the observer's replay: the original is served 229 sub-message(s) and 309 checksum entr(ies) in 647 ack(s), window at sub 0 of 230; we are served 227 and 303 in 639. The untrimmed run served the original 12313 and 4948 in 5363, and us 12313 and 4948 in 5364. Every sequence is a prefix of its untrimmed one",
+      "the verdict is unchanged: no must-match divergence against the original (15 informative)"
+    ]
+  }
+}

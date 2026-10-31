@@ -1,0 +1,48 @@
+# Binaries
+*.exe
+*.-windows.exe
+
+# Object files
+*.obj
+*.o
+*.a
+
+# Libraries
+*.so
+*.dylib
+*.dll
+
+# Go executable binary, built at the root by `go build ./cmd/battleserver`.
+# Anchored to the root on purpose: unanchored, this pattern also matched the
+# directory cmd/battleserver/, and `git add .` then skipped the server's only
+# entry point. The files stayed on disk, so `go build ./...` kept passing and
+# `git status` kept reporting a clean tree, while no clone could build the
+# server and scripts/deploy.ps1 threw on `./cmd/battleserver`.
+/battleserver
+
+# Go build cache
+/*.exe
+/*.test
+
+# IDE and editor temporary files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Experimental golang.org/x tools
+# golang.org/x/tools/gopls
+/gopls*
+
+# Dump support files
+/tmp/
+
+# GoReleaser output
+/dist/
+/.goreleaser.yaml
+
+# ago
+*.env
+
+docs/

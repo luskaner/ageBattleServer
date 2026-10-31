@@ -1,0 +1,18 @@
+SYNTHETIC capture, hand-written by internal/sim/sim_test.go, not recorded from a match.
+It is the SAME capture as testdata/synthetic with two different things, and both are in the
+recorded command line, which is the only thing that changes:
+  -maxPagesToStorePerSession 1   a single block in the frame store
+  -pageSize 128                  of 128 bytes in that block
+The original's store is ceil(peers * f) blocks of -pageSize bytes, with peers with a minimum of 8
+and f = -maxPagesToStorePerSession/8 (sub_1400E2590:242-243), and a frame costs its size plus 57
+(WWBS::ReplayPacketAllocator__vmethod_20:76). With 128 bytes the second ack does not fit in the
+block and the store recycles its own (vmethod_20:118), so by the time the observer asks at t=1s
+the store no longer has the match's first frame.
+The original's side is written with the arm that returns 3: sub_1400E3B50:87-160 builds the
+response and returns WITHOUT touching the observer list, that is 0x19=3, no 0x1E and no
+replay window. It is the symptom of capture _30, the only one of the five committed that does not
+cover this shape: in all of them the Original store had lost nothing and answered 0.
+The falsifier is the same fixture with -pageSize 65536, the original's own default: there the
+store loses nothing, the arm is the 0 one, and the difference comes out must-match from start-observe-status.
+Regenerate with:
+  go test ./internal/sim -run TestWriteSyntheticFixture -writefixture=internal/sim/testdata/synthetic-rollover

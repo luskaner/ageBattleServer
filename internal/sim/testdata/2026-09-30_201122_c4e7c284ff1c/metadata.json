@@ -1,0 +1,69 @@
+{
+  "format_version": 2,
+  "started_at": "2026-09-30 20:11:23",
+  "commit": "c4e7c284ff1c062244bea02dfe73a2d025d99a8b",
+  "dirty": "false",
+  "primary": {
+    "writer": "ours",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerOrig.exe",
+    "sha256": "98f40544298cdb0b759197097b2d0d98cbbe01d24a4dd6c7662a7bdb389f12b9"
+  },
+  "secondary": {
+    "writer": "original",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerReimpl.exe",
+    "sha256": "e090722eecabf1d8ad15b52f3772d66a6ce084fcb638489d881ccbe58e73244f"
+  },
+  "primary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "14001",
+    "-outofbandPort",
+    "14002",
+    "-websocketPort",
+    "14003",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "secondary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "15001",
+    "-outofbandPort",
+    "15002",
+    "-websocketPort",
+    "15003",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "trim": {
+    "tool": "cmd/trimsim",
+    "source": "2026-09-30_201122_c4e7c284ff1c",
+    "kept_from": "2026-09-30T20:27:20+02:00",
+    "kept_to": "2026-09-30T20:28:08+02:00",
+    "kept_span": "48s",
+    "dropped": "4180 of 4519 rows, 0.1 MB of log",
+    "why": "el bsPort necesita las DOS conexiones (el segundo cliente se anuncia a los 15s y el original le contesta a los 16s) y el primer segundo con acks: la primera subida 0x09 y los primeros 0x0A del original caen a los 47s, y 48s los mete enteros. A partir de ahi son 80 acks por segundo de lo mismo",
+    "verified": [
+      "conn 0: verdict: matched the original on everything must-match, and the same must-match findings on the same connections (0)",
+      "conn 19850: the client's own messages: 44, and they are the first 44 of the 127 the untrimmed capture recorded. The crop removed 0x09 x32 0x13 x27 0x14 x5 0x17 x19",
+      "conn 19850: the original's answers: 58, and they are the first 58 of the 1335 the untrimmed capture recorded. The crop removed 0x0A x1249 0x13 x23 0x14 x5 from this connection",
+      "conn 50316: the client's own messages: 43, and they are the first 43 of the 119 the untrimmed capture recorded. The crop removed 0x09 x30 0x13 x26 0x14 x5 0x17 x15",
+      "conn 50316: the original's answers: 5, and they are the first 5 of the 10 the untrimmed capture recorded. The crop removed 0x14 x5 from this connection",
+      "the verdict is unchanged: no must-match divergence against the original (15 informative)"
+    ]
+  }
+}

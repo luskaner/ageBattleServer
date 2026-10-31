@@ -1,0 +1,48 @@
+{
+  "format_version": 1,
+  "started_at": "2026-09-28T04:02:13Z",
+  "commit": "0000000",
+  "dirty": "false",
+  "primary": {
+    "writer": "original",
+    "exe_path": "BattleServerOrig.exe",
+    "sha256": "aa"
+  },
+  "secondary": {
+    "writer": "ours",
+    "exe_path": "BattleServerReimpl.exe",
+    "sha256": "bb"
+  },
+  "primary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "14001",
+    "-outofbandPort",
+    "14002",
+    "-webSocketPort",
+    "14003",
+    "-simulationPeriod",
+    "125",
+    "-maxPagesToStorePerSession",
+    "1",
+    "-pageSize",
+    "128"
+  ],
+  "secondary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "15001",
+    "-outofbandPort",
+    "14002",
+    "-webSocketPort",
+    "15003",
+    "-simulationPeriod",
+    "125",
+    "-maxPagesToStorePerSession",
+    "1",
+    "-pageSize",
+    "128"
+  ]
+}

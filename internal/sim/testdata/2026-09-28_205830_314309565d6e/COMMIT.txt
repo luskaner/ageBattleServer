@@ -1,0 +1,10 @@
+# provenance of this capture
+commit:      314309565d6e7969ed559328c265ed66f03f5e26
+dirty:       false
+when:        2026-09-28 20:58:30
+
+# identity is decided by CONTENT, not by these file names.
+# See roles.json in this directory, or README for the method.
+
+main_log      (T1) original  e090722eecabf1d8ad15b52f3772d66a6ce084fcb638489d881ccbe58e73244f  E:\SteamLibrary\steamapps\common\AoE2DE\BattleServer\BattleServerOrig.exe
+secondary_log (T2) ours  7cd701f34cb35852334095cb51030676428f2127dc8ba5906fedf8b25a4b566d  E:\SteamLibrary\steamapps\common\AoE2DE\BattleServer\BattleServerReimpl.exe

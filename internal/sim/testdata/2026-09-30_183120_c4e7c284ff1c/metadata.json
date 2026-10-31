@@ -1,0 +1,82 @@
+{
+  "format_version": 2,
+  "started_at": "2026-09-30 18:31:21",
+  "commit": "c4e7c284ff1c062244bea02dfe73a2d025d99a8b",
+  "dirty": "false",
+  "primary": {
+    "writer": "ours",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerOrig.exe",
+    "sha256": "98f40544298cdb0b759197097b2d0d98cbbe01d24a4dd6c7662a7bdb389f12b9"
+  },
+  "secondary": {
+    "writer": "original",
+    "exe_path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerReimpl.exe",
+    "sha256": "e090722eecabf1d8ad15b52f3772d66a6ce084fcb638489d881ccbe58e73244f"
+  },
+  "primary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "14001",
+    "-outofbandPort",
+    "14002",
+    "-websocketPort",
+    "14003",
+    "-region",
+    "Server",
+    "-name",
+    "Server",
+    "-publicPort",
+    "1784",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "secondary_args": [
+    "-relaybroadcastPort",
+    "0",
+    "-bsPort",
+    "15001",
+    "-outofbandPort",
+    "15002",
+    "-websocketPort",
+    "15003",
+    "-region",
+    "Server",
+    "-name",
+    "Server",
+    "-publicPort",
+    "1784",
+    "-simulationPeriod",
+    "125",
+    "-relayBroadcastPort",
+    "0",
+    "-sslCert",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_cert.pem",
+    "-sslKey",
+    "F:\\ageLANServer\\build\\server\\resources\\certificates\\selfsigned_key.pem"
+  ],
+  "trim": {
+    "tool": "cmd/trimsim",
+    "source": "2026-09-30_183120_c4e7c284ff1c",
+    "kept_from": "2026-09-30T18:37:07+02:00",
+    "kept_to": "2026-09-30T18:38:37+02:00",
+    "kept_span": "1m30s",
+    "dropped": "26865 of 30144 rows, 0.2 MB of log",
+    "why": "el observador se anuncia y recibe 0x19 y 0x1E a los 1m16s, y 1m30s deja esa ráfaga servida: los 13m40s que se van son el mismo 0x0A por segundo de la misma partida, y son los que hacen que la suite pase de 15 minutos a 90 segundos de reloj",
+    "verified": [
+      "conn 0: verdict: matched the original on everything must-match, and the same must-match findings on the same connections (0)",
+      "conn 42246: the client's own messages: 335, and they are the first 335 of the 538 the untrimmed capture recorded. The crop removed 0x09 x164 0x13 x5 0x14 x28 0x17 x6",
+      "conn 42246: the original's answers: 684, and they are the first 684 of the 7285 the untrimmed capture recorded. The crop removed 0x0A x6569 0x13 x4 0x14 x28 from this connection",
+      "conn 51265: the client's own messages: 3, and they are the first 3 of the 31 the untrimmed capture recorded. The crop removed 0x14 x27 0x1B x1",
+      "conn 51265: the original's answers: 611, and they are the first 611 of the 7208 the untrimmed capture recorded. The crop removed 0x0A x6570 0x14 x27 from this connection",
+      "conn 51265: the observer's replay: the original is served 259 sub-message(s) and 234 checksum entr(ies) in 608 ack(s), window at sub 0 of 262; we are served 258 and 234 in 604. The untrimmed run served the original 431 and 257 in 7178, and us 431 and 257 in 7174. Every sequence is a prefix of its untrimmed one",
+      "the verdict is unchanged: no must-match divergence against the original (15 informative)"
+    ]
+  }
+}

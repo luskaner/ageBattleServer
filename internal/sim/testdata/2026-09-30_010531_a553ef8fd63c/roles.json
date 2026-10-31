@@ -1,0 +1,31 @@
+{
+  "capture": "2026-09-30_010531_a553ef8fd63c",
+  "written_at": "2026-09-30T01:05:31.7854771+02:00",
+  "method": "binary content (Go build markers =\u003e ours, MSVC markers =\u003e original); file names are not trusted",
+  "primary": {
+    "target": 1,
+    "log_file": "main.log",
+    "exe": {
+      "path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerOrig.exe",
+      "identity": "ours",
+      "sha256": "1c6e6173ba233e625f10f00263f17a20631f090e49badb574a4d26a6b7219655",
+      "size": 11179520,
+      "why": "contains the Go build markers Go build ID:, runtime.main, go1."
+    },
+    "is_ours": true,
+    "identity_verified": true
+  },
+  "secondary": {
+    "target": 2,
+    "log_file": "secondary.log",
+    "exe": {
+      "path": "E:\\SteamLibrary\\steamapps\\common\\AoE2DE\\BattleServer\\BattleServerReimpl.exe",
+      "identity": "original",
+      "sha256": "e090722eecabf1d8ad15b52f3772d66a6ce084fcb638489d881ccbe58e73244f",
+      "size": 3216696,
+      "why": "contains the MSVC markers Microsoft Visual C++ runtime, MSVCP, VCRUNTIME"
+    },
+    "is_ours": true,
+    "identity_verified": true
+  }
+}
