@@ -133,8 +133,16 @@ func (c *Client) Start(ctx context.Context) error {
 	c.mu.Lock()
 	c.started = true
 	c.mu.Unlock()
+	// Cancelling ctx aborts at once instead of waiting for the read loop's poll.
+	// The loop can sit in readMessage for up to readPollInterval, so a cancel
+	// noticed only at the top of the next iteration leaves the connection open
+	// for seconds after its context ended. Closing the socket unblocks the read.
+	stopCancel := context.AfterFunc(ctx, c.abort)
+	go func() {
+		defer stopCancel()
+		c.readLoop(ctx)
+	}()
 	go c.writeLoop()
-	go c.readLoop(ctx)
 	return nil
 }
 

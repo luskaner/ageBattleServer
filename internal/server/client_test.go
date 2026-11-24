@@ -443,6 +443,10 @@ func TestClientReadLoopCancel(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	_ = client.Start(ctx)
+	// Let the read loop reach readMessage first. A cancel noticed only at the
+	// top of the next iteration leaves the connection open for readPoll, which
+	// is what a loaded runner hit: the cancel must close even a blocking read.
+	time.Sleep(50 * time.Millisecond)
 	cancel()
 
 	deadline := time.Now().Add(2 * time.Second)
