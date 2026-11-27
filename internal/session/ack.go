@@ -42,8 +42,9 @@ import (
 // (_24). The earlier reading — a fixed complement-slot pair — only matched
 // two-player sessions by coincidence.
 type AckState struct {
-	mu      sync.Mutex
-	started bool
+	mu        sync.Mutex
+	started   bool
+	startedAt time.Time // first upload that starts the session's ack stream
 	// queued holds each player slot's game-data chunks, oldest first, and what
 	// they are charged against the per-peer caps, so a peer that uploads faster
 	// than the tick drains hits the protocol's cap instead of growing without
@@ -124,16 +125,13 @@ func (a *AckState) QueueEmpty(slot byte) bool {
 	return q == nil || q.len() == 0
 }
 
-// SyncState answers the two questions the sync-timeout check asks about a slot,
-// under ONE lock: whether its game-data queue has drained, and when it last
-// uploaded. The check used to take this lock twice per peer per tick (QueueEmpty
-// and LastSync), which at 32 peers was 64 acquisitions a tick for an answer the
-// drain's own walk had already computed.
-func (a *AckState) SyncState(slot byte) (empty bool, last time.Time, ok bool) {
+// SyncState reports whether the slot's game-data queue has drained, its last
+// upload time if present, and when the session began carrying game data.
+func (a *AckState) SyncState(slot byte) (empty bool, last time.Time, ok bool, startedAt time.Time) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	q := a.queued[slot]
-	return q == nil || q.len() == 0, a.lastSync[slot], a.lastSyncSet[slot]
+	return q == nil || q.len() == 0, a.lastSync[slot], a.lastSyncSet[slot], a.startedAt
 }
 
 // DropPeer empties both of a slot's queues. It is what a peer's game data and
@@ -333,12 +331,15 @@ var subPool = sync.Pool{
 func (a *AckState) QueueDataSub(slot byte, lenPayload []byte) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.started = true
 
 	// The peer's last-sync time is stamped as the data arrives, and the drain
 	// compares it against the deadline to reap a peer that stopped sending.
 	a.lastSync[slot] = a.clock()
 	a.lastSyncSet[slot] = true
+	if !a.started {
+		a.started = true
+		a.startedAt = a.lastSync[slot]
+	}
 	q := a.queued[slot]
 	if q == nil {
 		q = &slotQueue{}
@@ -429,8 +430,9 @@ func (a *AckState) QueueEntries(slot byte, entries []byte) {
 	for off := 0; off+8 <= len(entries); off += 8 {
 		q.push(entries[off : off+8])
 	}
-	if q.pending() > 0 {
+	if !a.started && q.pending() > 0 {
 		a.started = true
+		a.startedAt = a.lastSync[slot]
 	}
 }
 
