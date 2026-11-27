@@ -958,7 +958,8 @@ const defaultSyncTimeoutMS = 60000
 
 // syncTimedOut is one peer's half of the drain's timeout branch: is this peer's
 // game data late? The deadline is the peer's override or the 60 s default and the
-// clock starts at the peer's last upload.
+// clock starts at the peer's last upload, at the earliest when the session
+// begins carrying game data.
 //
 // Only a drained queue can be late, so a peer still holding a backlog is spared
 // whatever the elapsed time is. The peer is passed in because the drain's walk
@@ -967,7 +968,7 @@ func (s *Session) syncTimedOut(p *Peer, now time.Time) bool {
 	if p == nil {
 		return false
 	}
-	empty, last, ok := s.Ack.SyncState(p.ID)
+	empty, last, ok, startedAt := s.Ack.SyncState(p.ID)
 	if !empty {
 		return false
 	}
@@ -976,9 +977,12 @@ func (s *Session) syncTimedOut(p *Peer, now time.Time) bool {
 		timeout = defaultSyncTimeoutMS * time.Millisecond
 	}
 	if !ok {
-		// Nothing queued yet: measure from when the peer joined, so a peer
-		// that never sends anything is eventually reaped.
 		last = p.LastSeen
+	}
+	if last.Before(startedAt) {
+		// Give every peer a full timeout after game data starts, even when
+		// the peer connected or sent a checksum while waiting in the lobby.
+		last = startedAt
 	}
 	return now.Sub(last) > timeout
 }
