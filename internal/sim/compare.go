@@ -714,8 +714,13 @@ func firstElapsed(msgs []*Msg, zero time.Time) Elapsed {
 // data, so what is comparable is each frame's index in that stream.
 //
 //   - the sequence. A reversed pair crashed the client in capture _5, which is why
-//     TestGameDataAckOrder exists, so a stream that does not rise is a must-match
-//     on its own, whatever the other side did.
+//     TestGameDataAckOrder exists, so a stream that goes BACKWARDS is a must-match
+//     on its own, whatever the other side did. A frame that lands on the same match
+//     frame as the one before it, or past the end of the player's own stream, is not
+//     that pair: it is a frame the match has no later copy of, which is what the
+//     observer's tail looks like when the replay outlives the player's recording. It
+//     stays informative, because the number of frames is not must-match either (see
+//     below).
 //   - the alignment with the original. Two streams of the same length that are
 //     the same frames in the same order are the same answer; a position where they
 //     name different frames is not, and the case that matters is the first one:
@@ -766,8 +771,8 @@ func replayPageOrder(rep *Report, want, got *Conn, match *matchIndex) {
 		return
 	}
 
-	ourIdx, ourOK := match.indexOf(ours)
-	theirIdx, theirOK := match.indexOf(theirs)
+	ourIdx, ourTotal, ourOK := match.indexOn(ours)
+	theirIdx, _, theirOK := match.indexOn(theirs)
 	if !ourOK || !theirOK {
 		rep.Informative = append(rep.Informative, Finding{
 			Rule:       RuleReplayPageOrder,
@@ -784,12 +789,56 @@ func replayPageOrder(rep *Report, want, got *Conn, match *matchIndex) {
 		if ourIdx[i] > ourIdx[i-1] {
 			continue
 		}
+		if i >= ourTotal {
+			// The window has more frames than the player's own stream: this one is
+			// past its end, so the match holds no frame for it to rise above. The
+			// observer keeps being served tick acks during the settle window, after
+			// the player's recording stops, and what arrives there repeats a body the
+			// match already had. That is a count difference at the tail -- informative,
+			// like every other frame count -- and not the reversed pair capture _5
+			// crashed on. Reporting it as one made the trim comparison depend on
+			// whether that last ack landed before the connection closed, which is the
+			// flake this rule kept producing.
+			rep.Informative = append(rep.Informative, Finding{
+				Rule:       RuleReplayPageOrder,
+				ClientPort: want.ClientPort,
+				Index:      i,
+				Detail: fmt.Sprintf("replay frame #%d resolves to match frame %d, but the player's own stream holds only %d frames: "+
+					"the frame is past its end, where the match has no frame to place it against. "+
+					"A frame at the tail is a count difference, not the reversed pair that crashed the client",
+					i, ourIdx[i], ourTotal),
+				Ours:   ours[i].String(),
+				AtOurs: elapsedOf(ours[i], rep.started),
+			})
+			continue
+		}
+		if ourIdx[i] == ourIdx[i-1] {
+			// The frame repeats the one before it: both bodies resolve to the same
+			// match frame, and the match's own stream holds no later copy of that
+			// body. A repeat is not a frame that went backwards -- the client reads
+			// the same frame twice, which is not the pair that crashed it in capture
+			// _5 -- so it is a count difference, which is informative here as every
+			// other frame count is. The cursor does not move, so a later frame that
+			// does advance still resolves correctly.
+			rep.Informative = append(rep.Informative, Finding{
+				Rule:       RuleReplayPageOrder,
+				ClientPort: want.ClientPort,
+				Index:      i,
+				Detail: fmt.Sprintf("replay frame #%d is match frame %d, the same frame as the one before it: "+
+					"the match's own ack stream holds no later copy of that body, so the frame repeats the "+
+					"position the window had already reached. A repeat is a count difference, "+
+					"not the reversed pair that crashed the client", i, ourIdx[i]),
+				Ours:   ours[i].String(),
+				AtOurs: elapsedOf(ours[i], rep.started),
+			})
+			continue
+		}
 		rep.mustMatch(Finding{
 			Rule:       RuleReplayPageOrder,
 			ClientPort: want.ClientPort,
 			Index:      i,
 			Detail: fmt.Sprintf("replay frame #%d is match frame %d, and the one before it was %d: "+
-				"the stream has to rise (capture _5 crashed the client on a reversed pair)",
+				"the stream goes backwards (capture _5 crashed the client on a reversed pair)",
 				i, ourIdx[i], ourIdx[i-1]),
 			Ours:   ours[i].String(),
 			Theirs: theirs[min(i, len(theirs)-1)].String(),
@@ -942,7 +991,9 @@ func buildMatchContent(conns []*Conn, ours map[int]*Conn) *matchContent {
 // indexOf turns a replay stream into frame indices, and reports whether every
 // frame identified. An unidentifiable frame is a fact about the capture or about
 // the harness, not about the order, so the caller is told instead of being given
-// a guess.
+// a guess. indexOn is the same scan and also returns the number of frames of the
+// stream the indices were resolved against, because an index only means something
+// next to that count: a window can outlive the player's own stream.
 //
 // The scan is monotone: the first candidate strictly after the previous index,
 // which is what resolves a run of identical heartbeats to consecutive indices
@@ -960,25 +1011,40 @@ func buildMatchContent(conns []*Conn, ours map[int]*Conn) *matchContent {
 //
 // What it does instead: report the frame at the NEAREST candidate at or below the
 // cursor (the smallest claim the bytes support) and leave the cursor where it was.
-// The reversal rule still fires, on the honest index, because a frame that cannot
-// advance is a frame that does not rise whatever index it is given; what stops is
-// the cascade, and with it the invented positions in the positional comparison
-// against the original. This is the open flake SESSION-JOURNAL.md records: the
-// window starting on match frame 503 instead of 0 after the store recycled.
+// The reversal rule still fires when that nearest candidate is strictly BEFORE the
+// cursor and the frame is still inside the part of the match the player's stream
+// covers, because such a frame lands on an earlier match frame and is a real
+// inverted pair whatever index it is given. A frame that lands exactly ON the
+// cursor is a repeat of the frame the window already reached, not a reversal: the
+// match's own stream has simply run out of later copies of that body, which is what
+// the observer's tail looks like when the replay outlives the player's recording.
+// What stops is the cascade, and with it the invented positions in the positional
+// comparison against the original. This is the open flake SESSION-JOURNAL.md
+// records: the window starting on match frame 503 instead of 0 after the store
+// recycled.
 func (m *matchIndex) indexOf(stream []*Msg) ([]int, bool) {
+	idx, _, ok := m.indexOn(stream)
+	return idx, ok
+}
+
+// indexOn is indexOf plus the number of frames of the stream the indices were
+// resolved against. That count is what tells a frame inside the match from one
+// past the end of it: an index is only meaningful against the stream it came
+// from, and a replay window can outlive that stream.
+func (m *matchIndex) indexOn(stream []*Msg) ([]int, int, bool) {
 	if len(stream) == 0 {
-		return nil, false
+		return nil, 0, false
 	}
 	out := make([]int, 0, len(stream))
 	prev := -1
-	ourSide := m.ours
+	ourSide, total := m.ours, m.oursN
 	if !m.identified(stream, ourSide) {
-		ourSide = m.theirs
+		ourSide, total = m.theirs, m.theirN
 	}
 	for _, msg := range stream {
 		cands := ourSide[string(msg.Body)]
 		if len(cands) == 0 {
-			return nil, false
+			return nil, 0, false
 		}
 		pick := -1
 		for _, cand := range cands {
@@ -999,7 +1065,7 @@ func (m *matchIndex) indexOf(stream []*Msg) ([]int, bool) {
 			prev = pick
 		}
 	}
-	return out, true
+	return out, total, true
 }
 
 func (m *matchIndex) identified(stream []*Msg, idx map[string][]int) bool {
